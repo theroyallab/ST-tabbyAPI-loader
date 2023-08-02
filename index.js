@@ -51,7 +51,7 @@ jQuery(async () => {
 
   // Append settingsHtml to extensions_settings
   // extension_settings and extensions_settings2 are the left and right columns of the settings menu
-  // You can append to either one
+  // Left should be extensions that deal with system functions and right should be visual/UI related 
   $("#extensions_settings").append(settingsHtml);
 
   // These are examples of listening for events
