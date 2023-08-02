@@ -8,6 +8,19 @@ import { extension_settings, getContext, loadExtensionSettings } from "../../../
 const extensionName = "example-extension";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}/`;
 const extensionSettings = extension_settings[extensionName];
+const defaultSettings = {};
+
+/**
+ * Loads the extension settings if they exist, otherwise initializes them to the defaults.
+ */
+async function loadSettings() {
+  //Create the settings if they don't exist
+  extension_settings[extensionName] = extension_settings[extensionName] || {};
+  if (Object.keys(extension_settings[extensionName]).length === 0) {
+    Object.assign(extension_settings[extensionName], defaultSettings);
+  }
+}
+
 
 function onButtonClick() {
   // This function is called when the button is clicked
