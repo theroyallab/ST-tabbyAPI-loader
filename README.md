@@ -23,6 +23,7 @@
 ## Support and Contributions
 
 *Where should someone ask for support?*
+*Consider including your own contact info for help/questions.*
 *How can they help add to this extension?*
 
 ## License
