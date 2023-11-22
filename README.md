@@ -1,16 +1,17 @@
-# SillyTavern Extension Example
+# TabbyAPI Loader
 
-*Provide a brief description of how your extension works, what problem it aims to solve.*
+Load and unload models with [TabbyAPI](https://github.com/theroyallab/tabbyAPI)
 
 ## Features
 
-*Describe some of the main selling points of your extension.*
+TabbyAPI is an AI inference API using the exllamav2 backend. This API supports model loading and unloading, but that support is not in SillyTavern by default. The extension aims to bridge that.
 
 ## Installation and Usage
 
 ### Installation
 
-*In most cases, this should just be using ST's inbuilt extension installer.* 
+Add The Royal Lab's extensions repo using the following URL inside SillyTavern:
+- [https://raw.githubusercontent.com/theroyallab/ST-repo/main/index.json](https://raw.githubusercontent.com/theroyallab/ST-repo/main/index.json)
 
 ### Usage
 
