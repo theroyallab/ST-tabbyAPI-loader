@@ -1,11 +1,11 @@
 {
-    "display_name": "Name Displayed in SillyTavern",
-    "loading_order": 9,
+    "display_name": "TabbyAPI Loader",
+    "loading_order": 12,
     "requires": [],
     "optional": [],
     "js": "index.js",
     "css": "style.css",
-    "author": "yourNameHere",
+    "author": "kingbri",
     "version": "1.0.0",
-    "homePage": "yourUrlHere"
+    "homePage": "https://github.com/theroyallab/ST-tabbyAPI-loader"
 }
