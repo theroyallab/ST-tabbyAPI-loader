@@ -1,14 +1,39 @@
-<!-- You might want to add additional HTML elements to ST. 
-    It's good practice to separate it out from your code -->
-<div class="example-extension-settings">
+<div class="tabby_loader_settings">
     <div class="inline-drawer">
         <div class="inline-drawer-toggle inline-drawer-header">
             <b>TabbyAPI Loader</b>
             <div class="inline-drawer-icon fa-solid fa-circle-chevron-down down"></div>
         </div>
+
         <div class="inline-drawer-content">
-            <div class="example-extension_block flex-container">
-                <input id="load_model_button" class="menu_button" type="button" value="Load a model" />
+            <h4 data-i18n="Tabby Admin key">Tabby Admin key</h4>
+            <small>If a key is not provided, the extension will attempt to find the stored API key in secrets.</small>
+            <div class="flex-container">
+                <input id="admin_key_tabby_ext" name="admin_key_tabby_ext" class="text_pole flex1 wide100p" maxlength="500" size="35" type="text" autocomplete="off">
+                <div id="admin_key_tabby_ext_clear" title="Clear your admin key" data-i18n="[title]Clear your admin key" class="menu_button fa-solid fa-circle-xmark clear-api-key" data-key="admin_key_tabby_ext">
+                </div>
+            </div>
+
+            <h4 data-i18n="Tabby API key">Model Select</h4>
+            <small>Make sure an admin key is set to avoid errors.</small>
+            <div class="flex-container">
+                <input
+                    id="model_list"
+                    name="model_list"
+                    class="text_pole flex1 wide100p"
+                    placeholder="Model name here"
+                    maxlength="100"
+                    size="35"
+                    value=""
+                    autocomplete="off"
+                >
+                <div id="reload_model_list_button" title="Refresh model list" data-i18n="[title]Refresh model list" class="menu_button fa-lg fa-solid fa-repeat">
+                </div>
+            </div>
+
+            <div class="flex-container">
+                <input id="load_model_button" class="menu_button" type="button" value="Load" />
+                <input id="unload_model_button" class="menu_button" type="button" value="Unload" />
             </div>
 
             <hr class="sysHR" />
