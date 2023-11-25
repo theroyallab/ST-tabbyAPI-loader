@@ -8,6 +8,8 @@ const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
 const extensionSettings = extension_settings[extensionName];
 const defaultSettings = {};
 
+// TODO: Make a common tabbyRequest function
+
 // Cached models list
 let models = [];
 
@@ -58,7 +60,7 @@ async function getTabbyAuth() {
             authToken = await findSecret("api_key_tabby");
         } catch (error) {
             console.error(`TabbyLoader: ${error}`);
-            console.error("Please make sure allowKeysExposure is true in config.conf and an API key is set for TabbyAPI.");
+            console.error("Admin key error: Please make sure allowKeysExposure is true in config.conf and an API key is set for TabbyAPI.");
         }
     }
 
@@ -91,7 +93,6 @@ async function fetchModels() {
 
         const response = await fetch(`${apiUrl}/v1/model/list`, {
             headers: {
-                // TODO: Add auth get routes
                 "Authorization": `Bearer ${authToken}`
             }
         });
@@ -115,19 +116,19 @@ async function fetchModels() {
 // This function is called when the button is clicked
 async function onLoadModelClick() {
     if (!isTabby()) {
-        toastr.error("This function is only useable when TabbyAPI is selected. Please select TabbyAPI as your SillyTavern API.");
+        toastr.error("TabbyLoader: This function is only usable when TabbyAPI is selected. Please select TabbyAPI as your SillyTavern API.");
 
         return;
     }
 
     const modelValue = $("#model_list").val()
 
-    if (!modelValue) {
-        // TODO: Fire an error here
+    if (!modelValue || !models.includes(modelValue)) {
+        toastr.error("TabbyLoader: Please make sure the model name is spelled correctly before loading!");
+
         return
     }
 
-    // const loaderHtml = $(await $.get(`${extensionFolderPath}/test.html`));
     const tabbyURL = getTabbyURL()
 
     const body = {
@@ -136,27 +137,56 @@ async function onLoadModelClick() {
 
     const authToken = await getTabbyAuth();
     if (!authToken) {
+        toastr.error("TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box.")
+
         return;
     }
 
-    const response = await fetch(`${tabbyURL}/v1/model/load`, {
-        method: "POST",
-        headers: {
-            "Authorization": `Bearer ${authToken}`,
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify(body)
-    });
+    try {
+        const response = await fetch(`${tabbyURL}/v1/model/load`, {
+            method: "POST",
+            headers: {
+                "Authorization": `Bearer ${authToken}`,
+                'Content-Type': 'application/json'
+            },
+            body: JSON.stringify(body)
+        });
+    
+        if (response.ok) {
+            const reader = response.body.getReader();
+            const decoder = new TextDecoder("utf-8");
+            const progressContainer = $("#loading_progress_container").hide();
+            progressContainer.show();
 
-    const reader = response.body.getReader();
-    const decoder = new TextDecoder("utf-8");
-    while (true) {
-        const { value, done } = await reader.read();
-        if (done) break;
-        console.log("Load recieved: ", decoder.decode(value));
+            while (true) {
+                const { value, done } = await reader.read();
+                if (done) break;
+
+                const packet = JSON.parse(decoder.decode(value).substring(5));
+
+                const numerator = parseInt(packet.module) ?? 0;
+                const denominator = parseInt(packet.modules) ?? 0;
+                const percent = numerator / denominator * 100;
+
+                if (packet.status === "finished") {
+                    toastr.info("TabbyLoader: Model loaded.")
+                    progressContainer.hide();
+                } else {
+                    $("#loading_progressbar").progressbar("value", Math.round((numerator / denominator * 100) ?? 0));
+                }
+            }
+        } else {
+            const responseJson = await response.json();
+            console.error("TabbyLoader: Could not load the model because:\n", responseJson?.detail ?? response.statusText);
+            toastr.error("TabbyLoader: Could not load the model. Please check the JavaScript or TabbyAPI console for details.");
+        }
+    } catch (error) {
+        console.error("TabbyLoader: Could not load the model because:\n", error);
+        toastr.error("Could not load the model. Please check the TabbyAPI console for details.");
+    } finally {
+        $("#loading_progressbar").progressbar("value", 0);
+        $("#loading_progress_container").hide();
     }
-
-    // const popupResult = await callPopup(loaderHtml, "confirm", undefined, { okButton: "Ok" });
 }
 
 async function onUnloadModelClick() {
@@ -176,7 +206,11 @@ async function onUnloadModelClick() {
     });
 
     if (response.ok) {
-        console.log("Model unloaded.");
+        toastr.info("TabbyLoader: Model unloaded.");
+    } else {
+        const responseJson = await response.json();
+        console.error("TabbyLoader: Could not unload the model because:\n", responseJson?.detail ?? response.statusText)
+        toastr.error("Could not unload the model. Please check the JavaScript or TabbyAPI console for details.")
     }
 }
 
@@ -208,15 +242,21 @@ jQuery(async () => {
 
     // These are examples of listening for events
     $("#load_model_button").on("click", function () {
-        onLoadModelClick();
+        if (verifyTabby()) {
+            onLoadModelClick();
+        }
     });
 
     $("#unload_model_button").on("click", function () {
-        onUnloadModelClick();
+        if (verifyTabby()) {
+            onUnloadModelClick();
+        }
     });
 
     $("#reload_model_list_button").on("click", async function () {
-        models = await fetchModels();
+        if (verifyTabby()) {
+            models = await fetchModels();
+        }
     });
 
     $("#admin_key_tabby_ext_clear").on("click", function () {
@@ -230,6 +270,11 @@ jQuery(async () => {
         localStorage.setItem("Tabby_Admin", value);
     });
 
+    $("#loading_progressbar").progressbar({
+        value: 0,
+    });
+
+    $("#loading_progress_container").hide();
     // Load settings when starting things up (if you have any)
     // loadSettings();
 });
