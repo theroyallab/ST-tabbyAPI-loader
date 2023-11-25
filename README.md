@@ -83,3 +83,21 @@ Follow toast messages.
 - If a toast tells you to check inside the JavaScript console, access it via `Inspect Element` then head to the console tab. From there, look for any red error lines that start with `TabbyLoader`.
 
 - If an error isn't properly described, check the TabbyAPI console in your terminal. It will most likely have a more detailed description of what went wrong.
+
+## Contributing
+
+If you have issues with the project:
+
+- Describe the issues in detail
+
+- If you have a feature request, please indicate it as such.
+
+If you have a Pull Request
+
+- Describe the pull request in detail, what, and why you are changing something
+
+## Developers and Permissions
+
+Creators/Developers:
+
+- kingbri
