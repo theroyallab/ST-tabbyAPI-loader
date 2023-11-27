@@ -11,3 +11,11 @@
    background: orange;
    border: none !important;
 }
+
+.tabby_loader_settings .menu_button {
+    width: fit-content;
+    display: flex;
+    gap: 10px;
+    flex-direction: row;
+}
+

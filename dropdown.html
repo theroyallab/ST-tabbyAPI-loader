@@ -6,14 +6,26 @@
         </div>
 
         <div class="inline-drawer-content">
-            <h4 data-i18n="Tabby Admin key">Tabby Admin key</h4>
-            <small>If a key is not provided, the extension will attempt to find the stored API key in secrets.</small>
+            <h4 data-i18n="Configuration">Configuration</h4>
+            <label>Admin Key</label>
+             <!-- <small>If a key is not provided, the extension will attempt to find the stored API key in secrets.</small> -->
             <div class="flex-container">
                 <input id="admin_key_tabby_ext" name="admin_key_tabby_ext" class="text_pole flex1 wide100p" maxlength="500" size="35" type="text" autocomplete="off">
                 <div id="admin_key_tabby_ext_clear" title="Clear your admin key" data-i18n="[title]Clear your admin key" class="menu_button fa-solid fa-circle-xmark clear-api-key" data-key="admin_key_tabby_ext">
                 </div>
             </div>
 
+            <div class="flex-container flexFlowColumn">
+                <label>URL Options</label>
+                <label class="checkbox flex-container">
+                    <input type="checkbox" name="only_format_display" />
+                    <span data-i18n="Only Format Display">Use CORS proxy</span>
+                </label>
+                <small>Override main API URL</small>
+                <input id="tabby_url_override" class="text_pole textarea_compact" type="text" />
+            </div>
+
+            <hr />
             <h4 data-i18n="Tabby API key">Model Select</h4>
             <small>Make sure an admin key is set to avoid errors.</small>
             <div class="flex-container">
@@ -36,7 +48,12 @@
             </div>
 
             <div class="flex-container">
-                <input id="load_model_button" class="menu_button" type="button" value="Load" />
+                <div id="open_params_editor" class="menu_button">
+                    <i class="fa-solid fa-pen-to-square"></i>
+                    <span>Set Parameters</span>
+                </div>
+
+                <input id="load_model_button" class="menu_button" type="submit" value="Load" />
                 <input id="unload_model_button" class="menu_button" type="button" value="Unload" />
             </div>
 
