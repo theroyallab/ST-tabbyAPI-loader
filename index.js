@@ -4,8 +4,10 @@ import { isTabby } from "../../../textgen-settings.js";
 import { findSecret } from "../../../secrets.js";
 
 const extensionName = "ST-tabbyAPI-loader";
+// Used for settings
+const settingsName = "tabbyLoader";
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const extensionSettings = extension_settings[extensionName];
+const extensionSettings = extension_settings[settingsName];
 const defaultSettings = {};
 
 // TODO: Make a common tabbyRequest function
@@ -13,22 +15,6 @@ const defaultSettings = {};
 // Cached models list
 let models = [];
 
-// TODO: Needed for later
-// Loads the extension settings if they exist, otherwise initializes them to the defaults.
-/*
-async function loadSettings() {
-    //Create the settings if they don't exist
-
-    extension_settings[extensionName] = extension_settings[extensionName] || {};
-
-    if (Object.keys(extension_settings[extensionName]).length === 0) {
-        Object.assign(extension_settings[extensionName], defaultSettings);
-    }
-
-    // Updating settings in the UI
-    $("#example_setting").prop("checked", extension_settings[extensionName].example_setting).trigger("input");
-}
-*/
 // const popupResult = await callPopup(editorHtml, "confirm", undefined, { okButton: "Save" });
 
 // Check if user is connected to TabbyAPI
@@ -42,8 +28,10 @@ function verifyTabby(logError = true) {
 }
 
 // Fetch a cleaned URL
+// Use the override if specified
 function getTabbyURL() {
-    return api_server_textgenerationwebui.replace(/\/$/, "");
+    const url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : api_server_textgenerationwebui;
+    return url.replace(/\/$/, "");
 }
 
 // Fetch the TabbyAPI admin key if present
@@ -214,6 +202,22 @@ async function onUnloadModelClick() {
     }
 }
 
+async function loadSettings() {
+    //Create the settings if they don't exist
+
+    extension_settings[settingsName] = extension_settings[settingsName] || {};
+
+    if (Object.keys(extension_settings[settingsName]).length === 0) {
+        Object.assign(extension_settings[settingsName], defaultSettings);
+    }
+
+    $("#tabby_url_override").val(extensionSettings.urlOverride ?? "");
+
+    // Updating settings in the UI
+    const placeholder = await getTabbyAuth() ? '✔️ Key found' : '❌ Missing key';
+    $("#admin_key_tabby_ext").attr("placeholder", placeholder);
+}
+
 // This function is called when the extension is loaded
 jQuery(async () => {
     // This is an example of loading HTML from a file
@@ -263,12 +267,20 @@ jQuery(async () => {
         localStorage.removeItem("Tabby_Admin");
     });
 
-    const placeholder = await getTabbyAuth() ? '✔️ Key found' : '❌ Missing key';
-    $("#admin_key_tabby_ext").attr("placeholder", placeholder);
     $("#admin_key_tabby_ext").on("input", function () {
         const value = $(this).val();
-        localStorage.setItem("Tabby_Admin", value);
+        if (value) {
+            localStorage.setItem("Tabby_Admin", value);
+        }
     });
+
+    $("#tabby_url_override").on("input", function () {
+        const value = $(this).val();
+        if (value) {
+            extensionSettings.urlOverride = value;
+            saveSettingsDebounced();
+        }
+    })
 
     $("#loading_progressbar").progressbar({
         value: 0,
@@ -276,5 +288,5 @@ jQuery(async () => {
 
     $("#loading_progress_container").hide();
     // Load settings when starting things up (if you have any)
-    // loadSettings();
+    await loadSettings();
 });
