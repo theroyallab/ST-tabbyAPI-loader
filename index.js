@@ -1,5 +1,5 @@
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
-import { api_server_textgenerationwebui, callPopup, online_status, saveSettingsDebounced } from "../../../../script.js";
+import { api_server_textgenerationwebui, callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from "../../../../script.js";
 import { isTabby } from "../../../textgen-settings.js";
 import { findSecret } from "../../../secrets.js";
 
@@ -21,7 +21,7 @@ let models = [];
 function verifyTabby(logError = true) {
     const result = online_status !== "no_connection" || isTabby();
     if (!result && logError) {
-        toastr.error("Tabby Loader: Please connect to a TabbyAPI instance to use this extension.");
+        toastr.error("TabbyLoader: Please connect to a TabbyAPI instance to use this extension");
     }
 
     return result;
@@ -30,7 +30,11 @@ function verifyTabby(logError = true) {
 // Fetch a cleaned URL
 // Use the override if specified
 function getTabbyURL() {
-    const url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : api_server_textgenerationwebui;
+    let url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : api_server_textgenerationwebui;
+    if (extensionSettings.useProxy) {
+        url = `/proxy/${url}`
+    }
+
     return url.replace(/\/$/, "");
 }
 
@@ -66,7 +70,7 @@ async function getTabbyAuth() {
 // Fetch the model list for autocomplete population
 async function fetchModels() {
     if (!verifyTabby(false)) {
-        console.error("TabbyLoader: Could not connect to TabbyAPI.");
+        console.error("TabbyLoader: Could not connect to TabbyAPI");
         return
     }
 
@@ -81,7 +85,7 @@ async function fetchModels() {
 
         const response = await fetch(`${apiUrl}/v1/model/list`, {
             headers: {
-                "Authorization": `Bearer ${authToken}`
+                "X-api-key": authToken
             }
         });
 
@@ -133,9 +137,10 @@ async function onLoadModelClick() {
     try {
         const response = await fetch(`${tabbyURL}/v1/model/load`, {
             method: "POST",
+            credentials: 'include',
             headers: {
-                "Authorization": `Bearer ${authToken}`,
-                'Content-Type': 'application/json'
+                ...getRequestHeaders(),
+                "X-admin-key": authToken
             },
             body: JSON.stringify(body)
         });
@@ -150,7 +155,8 @@ async function onLoadModelClick() {
                 const { value, done } = await reader.read();
                 if (done) break;
 
-                const packet = JSON.parse(decoder.decode(value).substring(5));
+                const decodedValue = decoder.decode(value);
+                const packet = JSON.parse(decodedValue.substring(5));
 
                 const numerator = parseInt(packet.module) ?? 0;
                 const denominator = parseInt(packet.modules) ?? 0;
@@ -160,7 +166,7 @@ async function onLoadModelClick() {
                     toastr.info("TabbyLoader: Model loaded.")
                     progressContainer.hide();
                 } else {
-                    $("#loading_progressbar").progressbar("value", Math.round((numerator / denominator * 100) ?? 0));
+                    $("#loading_progressbar").progressbar("value", Math.round(percent ?? 0));
                 }
             }
         } else {
@@ -189,12 +195,12 @@ async function onUnloadModelClick() {
     const response = await fetch(`${tabbyURL}/v1/model/unload`, {
         method: "GET",
         headers: {
-            "Authorization": `Bearer ${authToken}`
+            "X-admin-key": authToken
         }
     });
 
     if (response.ok) {
-        toastr.info("TabbyLoader: Model unloaded.");
+        toastr.info("TabbyLoader: Model unloaded");
     } else {
         const responseJson = await response.json();
         console.error("TabbyLoader: Could not unload the model because:\n", responseJson?.detail ?? response.statusText)
@@ -212,6 +218,7 @@ async function loadSettings() {
     }
 
     $("#tabby_url_override").val(extensionSettings.urlOverride ?? "");
+    $("#tabby_use_proxy").prop("checked", extensionSettings.useProxy ?? false)
 
     // Updating settings in the UI
     const placeholder = await getTabbyAuth() ? '✔️ Key found' : '❌ Missing key';
@@ -280,7 +287,12 @@ jQuery(async () => {
             extensionSettings.urlOverride = value;
             saveSettingsDebounced();
         }
-    })
+    });
+
+    $("#tabby_use_proxy").on("input", function() {
+        extensionSettings.useProxy = !!$(this).prop("checked");
+        saveSettingsDebounced();
+    });
 
     $("#loading_progressbar").progressbar({
         value: 0,
