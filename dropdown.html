@@ -18,8 +18,8 @@
             <div class="flex-container flexFlowColumn">
                 <label>URL Options</label>
                 <label class="checkbox flex-container">
-                    <input type="checkbox" name="only_format_display" />
-                    <span data-i18n="Only Format Display">Use CORS proxy</span>
+                    <input id="tabby_use_proxy" type="checkbox" name="only_format_display" />
+                    <span data-i18n="Use CORS proxy">Use CORS proxy</span>
                 </label>
                 <small>Override main API URL</small>
                 <input id="tabby_url_override" class="text_pole textarea_compact" type="text" />
@@ -48,11 +48,6 @@
             </div>
 
             <div class="flex-container">
-                <div id="open_params_editor" class="menu_button">
-                    <i class="fa-solid fa-pen-to-square"></i>
-                    <span>Set Parameters</span>
-                </div>
-
                 <input id="load_model_button" class="menu_button" type="submit" value="Load" />
                 <input id="unload_model_button" class="menu_button" type="button" value="Unload" />
             </div>
