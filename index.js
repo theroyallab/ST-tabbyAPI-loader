@@ -1,6 +1,6 @@
 import { extension_settings, getContext, loadExtensionSettings } from "../../../extensions.js";
 import { api_server_textgenerationwebui, callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from "../../../../script.js";
-import { isTabby } from "../../../textgen-settings.js";
+import { textgen_types, textgenerationwebui_settings } from "../../../textgen-settings.js";
 import { findSecret } from "../../../secrets.js";
 
 const extensionName = "ST-tabbyAPI-loader";
@@ -15,11 +15,9 @@ const defaultSettings = {};
 // Cached models list
 let models = [];
 
-// const popupResult = await callPopup(editorHtml, "confirm", undefined, { okButton: "Save" });
-
 // Check if user is connected to TabbyAPI
 function verifyTabby(logError = true) {
-    const result = online_status !== "no_connection" || isTabby();
+    const result = online_status !== "no_connection" || textgenerationwebui_settings.type === textgen_types.TABBY;
     if (!result && logError) {
         toastr.error("TabbyLoader: Please connect to a TabbyAPI instance to use this extension");
     }
@@ -107,9 +105,7 @@ async function fetchModels() {
 
 // This function is called when the button is clicked
 async function onLoadModelClick() {
-    if (!isTabby()) {
-        toastr.error("TabbyLoader: This function is only usable when TabbyAPI is selected. Please select TabbyAPI as your SillyTavern API.");
-
+    if (!verifyTabby()) {
         return;
     }
 
@@ -163,7 +159,7 @@ async function onLoadModelClick() {
                 const percent = numerator / denominator * 100;
 
                 if (packet.status === "finished") {
-                    toastr.info("TabbyLoader: Model loaded.")
+                    toastr.info("TabbyLoader: Model loaded")
                     progressContainer.hide();
                 } else {
                     $("#loading_progressbar").progressbar("value", Math.round(percent ?? 0));
