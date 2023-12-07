@@ -29,7 +29,7 @@ function verifyTabby(logError = true) {
 // Use the override if specified
 function getTabbyURL() {
     let url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : api_server_textgenerationwebui;
-    if (extensionSettings.useProxy) {
+    if (extensionSettings?.useProxy) {
         url = `/proxy/${url}`
     }
 
@@ -213,8 +213,8 @@ async function loadSettings() {
         Object.assign(extension_settings[settingsName], defaultSettings);
     }
 
-    $("#tabby_url_override").val(extensionSettings.urlOverride ?? "");
-    $("#tabby_use_proxy").prop("checked", extensionSettings.useProxy ?? false)
+    $("#tabby_url_override").val(extensionSettings?.urlOverride ?? "");
+    $("#tabby_use_proxy").prop("checked", extensionSettings?.useProxy ?? false)
 
     // Updating settings in the UI
     const placeholder = await getTabbyAuth() ? '✔️ Key found' : '❌ Missing key';
