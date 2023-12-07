@@ -208,9 +208,9 @@ async function loadSettings() {
     //Create the settings if they don't exist
 
     extension_settings[settingsName] = extension_settings[settingsName] || {};
-
     if (Object.keys(extension_settings[settingsName]).length === 0) {
         Object.assign(extension_settings[settingsName], defaultSettings);
+        saveSettingsDebounced();
     }
 
     $("#tabby_url_override").val(extensionSettings?.urlOverride ?? "");
@@ -279,7 +279,7 @@ jQuery(async () => {
 
     $("#tabby_url_override").on("input", function () {
         const value = $(this).val();
-        if (value) {
+        if (value !== undefined) {
             extensionSettings.urlOverride = value;
             saveSettingsDebounced();
         }
