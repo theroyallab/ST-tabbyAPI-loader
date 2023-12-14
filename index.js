@@ -1,5 +1,5 @@
 import { extension_settings } from '../../../extensions.js';
-import { api_server_textgenerationwebui, getRequestHeaders, online_status, saveSettingsDebounced } from '../../../../script.js';
+import { api_server_textgenerationwebui, callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from '../../../../script.js';
 import { textgen_types, textgenerationwebui_settings } from '../../../textgen-settings.js';
 import { findSecret } from '../../../secrets.js';
 
@@ -58,7 +58,7 @@ async function getTabbyAuth() {
     if (!authToken) {
         console.error(
             'TabbyLoader: Admin key not found.',
-            'Please make sure allowKeysExposure is true in config.conf if fetching from secrets.'
+            'Please make sure allowKeysExposure is true in config.conf if fetching from secrets.',
         );
     }
 
@@ -92,7 +92,7 @@ async function fetchModels() {
 
             return models.data.map((e) => e.id);
         } else {
-            console.error(`Request to /v1/model/list failed with a statuscode of ${response.status}:\n${response.statusText}`)
+            console.error(`Request to /v1/model/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
 
             return [];
         }
@@ -121,6 +121,9 @@ async function onLoadModelClick() {
 
     const body = {
         name: modelValue,
+        max_seq_len: extensionSettings?.modelParams?.maxSeqLen,
+        rope_scale: extensionSettings?.modelParams?.ropeScale,
+        rope_alpha: extensionSettings?.modelParams?.ropeAlpha,
     };
 
     const authToken = await getTabbyAuth();
@@ -202,6 +205,31 @@ async function onUnloadModelClick() {
         const responseJson = await response.json();
         console.error('TabbyLoader: Could not unload the model because:\n', responseJson?.detail ?? response.statusText);
         toastr.error('Could not unload the model. Please check the JavaScript or TabbyAPI console for details.');
+    }
+}
+
+async function onParameterEditorClick() {
+    const parameterHtml = $(await $.get(`${extensionFolderPath}/modelParameters.html`));
+    parameterHtml
+        .find('input[name="max_seq_len"]')
+        .val(extensionSettings?.modelParams?.maxSeqLen ?? 4096);
+    parameterHtml
+        .find('input[name="rope_scale"]')
+        .val(extensionSettings?.modelParams?.ropeScale ?? 1.0);
+    parameterHtml
+        .find('input[name="rope_alpha"]')
+        .val(extensionSettings?.modelParams?.ropeAlpha ?? 1.0);
+
+    const popupResult = await callPopup(parameterHtml, 'confirm', undefined, { okButton: 'Save' });
+    if (popupResult) {
+        const newParams = {
+            maxSeqLen: parameterHtml.find('input[name="max_seq_len"]').val(),
+            ropeScale: parameterHtml.find('input[name="rope_scale"]').val(),
+            ropeAlpha: parameterHtml.find('input[name="rope_alpha"]').val(),
+        };
+
+        Object.assign(extensionSettings, { modelParams: newParams });
+        saveSettingsDebounced();
     }
 }
 
@@ -296,6 +324,10 @@ jQuery(async () => {
     });
 
     $('#loading_progress_container').hide();
+    $('#open_parameter_editor').on('click', function () {
+        onParameterEditorClick();
+    });
+
     // Load settings when starting things up (if you have any)
     await loadSettings();
 });

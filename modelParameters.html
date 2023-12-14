@@ -1,34 +1,43 @@
 
 <div id="tabby_loader_popup">
     <div>
-        <h3><strong data-i18n="">Model Loader</strong>
+        <h3><strong data-i18n="">Set Parameters</strong>
             <a href="https://github.com/theroyallab/tabbyAPI" class="notes-link" target="_blank">
                 <span class="note-link-span">?</span>
             </a>
         </h3>
 
-        <small class="flex-container extensions_info">
+        <small class="flex-container extensions_info justifyCenter">
             Load a model via TabbyAPI with various parameters.
         </small>
         <hr />
 
-        <div class="flex-container flexFlowColumn">
+        <div class="flex-container">
             <div class="flex1">
-                <label for="regex_script_name" class="title_restorable">
-                    <small data-i18n="Script Name">Script Name</small>
+                <label for="max_seq_len">
+                    <small data-i18n="Rope Alpha">Max Seq Len</small>
                 </label>
                 <div>
-                    <input class="regex_script_name text_pole textarea_compact" type="text" />
+                    <input name="max_seq_len" class="text_pole" type="text" />
                 </div>
             </div>
             <div class="flex1">
-                <label for="find_regex" class="title_restorable">
-                    <small data-i18n="Find Regex">Find Regex</small>
+                <label for="rope_scale">
+                    <small data-i18n="Rope Scale">Rope Scale</small>
                 </label>
                 <div>
-                    <input class="find_regex text_pole textarea_compact" type="text" />
+                    <input name="rope_scale" class="text_pole" type="text" />
                 </div>
             </div>
+            <div class="flex1">
+                <label for="rope_alpha">
+                    <small data-i18n="Rope Alpha">Rope Alpha</small>
+                </label>
+                <div>
+                    <input name="rope_alpha" class="text_pole" type="text" />
+                </div>
+            </div>
+        <!--
             <div class="flex1">
                 <label for="regex_replace_string" class="title_restorable">
                     <small data-i18n="Replace With">Replace With</small>
@@ -53,8 +62,10 @@
                     ></textarea>
                 </div>
             </div>
+        -->
         </div>
 
+    <!--
         <div class="flex-container">
             <div class="wi-enter-footer-text flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small>Affects</small>
@@ -108,5 +119,6 @@
                 </select>
             </div>
         </div>
+    -->
     </div>
 </div>
