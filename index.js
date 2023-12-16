@@ -126,10 +126,19 @@ async function onLoadModelClick() {
         rope_alpha: extensionSettings?.modelParams?.ropeAlpha,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
+        cache_mode: extensionSettings?.modelParams?.eightBitCache ?? false ? 'FP8' : 'FP16',
     };
 
     if (!body.gpu_split_auto) {
-        body['gpu_split'] = extensionSettings?.modelParams?.gpuSplit;
+        // TODO: Add a check for an empty array here
+        const gpuSplit = extensionSettings?.modelParams?.gpuSplit;
+
+        if (Array.isArray(gpuSplit) && gpuSplit?.length > 0) {
+            body['gpu_split'] = gpuSplit;
+        } else {
+            console.error(`TabbyLoader: GPU split ${gpuSplit} is invalid. Set to auto or adjust your parameters!`);
+            toastr.error('TabbyLoader: Invalid GPU split. Set GPU split to auto or adjust your parameters');
+        }
     }
 
     const authToken = await getTabbyAuth();
@@ -228,14 +237,17 @@ async function onParameterEditorClick() {
     parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
+    parameterHtml
+        .find('input[name="eight_bit_cache"]')
+        .prop('checked', extensionSettings?.modelParams?.eightBitCache ?? false);
 
     // MARK: GPU split options
     const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
 
-    const gpuSplitValue = extensionSettings?.modelParams?.gpuSplit ?? [];
+    const gpuSplitValue = extensionSettings?.modelParams?.gpuSplit;
     const gpuSplitTextbox = parameterHtml
         .find('input[name="gpu_split_value"]')
-        .val(JSON.stringify(gpuSplitValue.length > 0 ? gpuSplitValue : undefined))
+        .val(JSON.stringify(gpuSplitValue?.length > 0 ? gpuSplitValue : undefined))
         .prop('disabled', gpuSplitAuto);
 
     parameterHtml
@@ -253,8 +265,10 @@ async function onParameterEditorClick() {
             ropeAlpha: parameterHtml.find('input[name="rope_alpha"]').val(),
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
+            eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
         };
 
+        // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
         try {
             const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
