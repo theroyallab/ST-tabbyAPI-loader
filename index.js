@@ -124,7 +124,13 @@ async function onLoadModelClick() {
         max_seq_len: extensionSettings?.modelParams?.maxSeqLen,
         rope_scale: extensionSettings?.modelParams?.ropeScale,
         rope_alpha: extensionSettings?.modelParams?.ropeAlpha,
+        no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
+        gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
     };
+
+    if (!body.gpu_split_auto) {
+        body['gpu_split'] = extensionSettings?.modelParams?.gpuSplit;
+    }
 
     const authToken = await getTabbyAuth();
     if (!authToken) {
@@ -219,6 +225,25 @@ async function onParameterEditorClick() {
     parameterHtml
         .find('input[name="rope_alpha"]')
         .val(extensionSettings?.modelParams?.ropeAlpha ?? 1.0);
+    parameterHtml
+        .find('input[name="no_flash_attention"]')
+        .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
+
+    // MARK: GPU split options
+    const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
+
+    const gpuSplitValue = extensionSettings?.modelParams?.gpuSplit ?? [];
+    const gpuSplitTextbox = parameterHtml
+        .find('input[name="gpu_split_value"]')
+        .val(JSON.stringify(gpuSplitValue.length > 0 ? gpuSplitValue : undefined))
+        .prop('disabled', gpuSplitAuto);
+
+    parameterHtml
+        .find('input[name="gpu_split_auto"]')
+        .prop('checked', gpuSplitAuto)
+        .on('click', function () {
+            gpuSplitTextbox.prop('disabled', $(this).prop('checked'));
+        });
 
     const popupResult = await callPopup(parameterHtml, 'confirm', undefined, { okButton: 'Save' });
     if (popupResult) {
@@ -226,7 +251,23 @@ async function onParameterEditorClick() {
             maxSeqLen: parameterHtml.find('input[name="max_seq_len"]').val(),
             ropeScale: parameterHtml.find('input[name="rope_scale"]').val(),
             ropeAlpha: parameterHtml.find('input[name="rope_alpha"]').val(),
+            noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
+            gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
         };
+
+        const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
+        try {
+            const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
+            if (Array.isArray(gpuSplitArray)) {
+                newParams['gpuSplit'] = gpuSplitArray;
+            } else {
+                console.error(`Provided GPU split value (${gpuSplitArray}) is not an array.`);
+                newParams['gpuSplit'] = [];
+            }
+        } catch (error) {
+            console.error(error);
+            newParams['gpuSplit'] = [];
+        }
 
         Object.assign(extensionSettings, { modelParams: newParams });
         saveSettingsDebounced();
@@ -247,7 +288,7 @@ async function loadSettings() {
 
     // Updating settings in the UI
     const placeholder = await getTabbyAuth() ? '✔️ Key found' : '❌ Missing key';
-    $('#admin_key_tabby_ext').attr('placeholder', placeholder);
+    $('#tabby_admin_key').attr('placeholder', placeholder);
 }
 
 // This function is called when the extension is loaded
@@ -295,11 +336,11 @@ jQuery(async () => {
         }
     });
 
-    $('#admin_key_tabby_ext_clear').on('click', function () {
+    $('#tabby_admin_key_clear').on('click', function () {
         localStorage.removeItem('Tabby_Admin');
     });
 
-    $('#admin_key_tabby_ext').on('input', function () {
+    $('#tabby_admin_key').on('input', function () {
         const value = $(this).val();
         if (value) {
             localStorage.setItem('Tabby_Admin', value);

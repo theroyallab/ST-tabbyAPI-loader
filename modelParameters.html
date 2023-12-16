@@ -8,117 +8,50 @@
         </h3>
 
         <small class="flex-container extensions_info justifyCenter">
-            Load a model via TabbyAPI with various parameters.
+            Set Parameters for Loading a Model
         </small>
         <hr />
 
+        <!-- Model parameter textboxes -->
         <div class="flex-container">
             <div class="flex1">
                 <label for="max_seq_len">
-                    <small data-i18n="Rope Alpha">Max Seq Len</small>
+                    <small data-i18n="Max Seq Len">Max Seq Len</small>
                 </label>
-                <div>
-                    <input name="max_seq_len" class="text_pole" type="text" />
-                </div>
+                <input name="max_seq_len" class="text_pole" type="text" />
             </div>
             <div class="flex1">
                 <label for="rope_scale">
                     <small data-i18n="Rope Scale">Rope Scale</small>
                 </label>
-                <div>
-                    <input name="rope_scale" class="text_pole" type="text" />
-                </div>
+                <input name="rope_scale" class="text_pole" type="text" />
             </div>
             <div class="flex1">
                 <label for="rope_alpha">
                     <small data-i18n="Rope Alpha">Rope Alpha</small>
                 </label>
-                <div>
-                    <input name="rope_alpha" class="text_pole" type="text" />
-                </div>
+                <input name="rope_alpha" class="text_pole" type="text" />
             </div>
-        <!--
-            <div class="flex1">
-                <label for="regex_replace_string" class="title_restorable">
-                    <small data-i18n="Replace With">Replace With</small>
-                </label>
-                <div>
-                    <textarea
-                        class="regex_replace_string text_pole wide100p textarea_compact"
-                        placeholder="Use {{match}} to include the matched text from the Find Regex"
-                        rows="2"
-                    ></textarea>
-                </div>
-            </div>
-            <div class="flex1">
-                <label for="regex_trim_strings" class="title_restorable">
-                    <small data-i18n="Trim Out">Trim Out</small>
-                </label>
-                <div>
-                    <textarea
-                        class="regex_trim_strings text_pole wide100p textarea_compact"
-                        placeholder="Globally trims any unwanted parts from a regex match before replacement. Separate each element by an enter."
-                        rows="3"
-                    ></textarea>
-                </div>
-            </div>
-        -->
         </div>
 
-    <!--
+        <!-- Container for GPU Split and other options -->
         <div class="flex-container">
-            <div class="wi-enter-footer-text flex-container flexFlowColumn flexNoGap alignitemsstart">
-                <small>Affects</small>
-                <div>
-                    <label class="checkbox flex-container">
-                        <input type="checkbox" name="replace_position" value="1">
-                        <span data-i18n="Before Char">User Input</span>
-                    </label>
-                </div>
-                <div>
-                    <label class="checkbox flex-container">
-                        <input type="checkbox" name="replace_position" value="2">
-                        <span data-i18n="After Char">AI Output</span>
-                    </label>
-                </div>
-                <div>
-                    <label class="checkbox flex-container">
-                        <input type="checkbox" name="replace_position" value="3">
-                        <span data-i18n="Slash Commands">Slash Commands</span>
-                    </label>
-                </div>
+            <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
+                <small class="justifyCenter">GPU Split</small>
+                <label class="checkbox flex-container">
+                    <input type="checkbox" name="gpu_split_auto"/>
+                    <span data-i18n="Auto Split">Auto Split</span>
+                </label>
+                <input name="gpu_split_value" class="text_pole" type="text" placeholder="ex. [20.6, 24]" />
             </div>
-            <div class="wi-enter-footer-text flex-container flexFlowColumn flexNoGap alignitemsstart">
+    
+            <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small>Other Options</small>
                 <label class="checkbox flex-container">
-                    <input type="checkbox" name="disabled" />
-                    <span data-i18n="Disabled">Disabled</span>
+                    <input type="checkbox" name="no_flash_attention" />
+                    <span data-i18n="Disable FA2">Disable FA2</span>
                 </label>
-                <label class="checkbox flex-container">
-                    <input type="checkbox" name="only_format_display" />
-                    <span data-i18n="Only Format Display">Only Format Display</span>
-                </label>
-                <label class="checkbox flex-container" title="Chat history won't change, only the prompt as the request is sent (on generation)">
-                    <input type="checkbox" name="only_format_prompt"/>
-                    <span data-i18n="Only Format Prompt (?)">Only Format Prompt (?)</span>
-                </label>
-                <label class="checkbox flex-container">
-                    <input type="checkbox" name="run_on_edit" />
-                    <span data-i18n="Run On Edit">Run On Edit</span>
-                </label>
-                <label class="checkbox flex-container">
-                    <input type="checkbox" name="substitute_regex" />
-                    <span data-i18n="Substitute Regex">Substitute Regex</span>
-                </label>
-            </div>
-            <div class="flex-container flexFlowColumn alignitemsstart">
-                <small>Replacement Strategy</small>
-                <select name="replace_strategy_select" class="margin0">
-                    <option value="0">Replace</option>
-                    <option value="1">Overlay</option>
-                </select>
             </div>
         </div>
-    -->
     </div>
 </div>
