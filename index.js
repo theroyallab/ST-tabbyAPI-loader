@@ -1,5 +1,5 @@
 import { extension_settings } from '../../../extensions.js';
-import { api_server_textgenerationwebui, callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from '../../../../script.js';
+import { callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from '../../../../script.js';
 import { textgen_types, textgenerationwebui_settings } from '../../../textgen-settings.js';
 import { findSecret } from '../../../secrets.js';
 
@@ -28,7 +28,8 @@ function verifyTabby(logError = true) {
 // Fetch a cleaned URL
 // Use the override if specified
 function getTabbyURL() {
-    let url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : api_server_textgenerationwebui;
+    const apiUrl = $("#tabby_api_url_text").val()
+    let url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : apiUrl;
     if (extensionSettings?.useProxy) {
         url = `/proxy/${url}`;
     }
