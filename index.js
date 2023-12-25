@@ -2,6 +2,7 @@ import { extension_settings } from '../../../extensions.js';
 import { callPopup, getRequestHeaders, online_status, saveSettingsDebounced } from '../../../../script.js';
 import { textgen_types, textgenerationwebui_settings } from '../../../textgen-settings.js';
 import { findSecret } from '../../../secrets.js';
+import EventSourceStream from '../../../sse-stream.js';
 
 const extensionName = 'ST-tabbyAPI-loader';
 // Used for settings
@@ -162,8 +163,9 @@ async function onLoadModelClick() {
         });
 
         if (response.ok) {
-            const reader = response.body.getReader();
-            const decoder = new TextDecoder('utf-8');
+            const eventStream = new EventSourceStream();
+            response.body.pipeThrough(eventStream);
+            const reader = eventStream.readable.getReader();
             const progressContainer = $('#loading_progress_container').hide();
             progressContainer.show();
 
@@ -171,8 +173,7 @@ async function onLoadModelClick() {
                 const { value, done } = await reader.read();
                 if (done) break;
 
-                const decodedValue = decoder.decode(value);
-                const packet = JSON.parse(decodedValue.substring(5));
+                const packet = JSON.parse(value.data);
 
                 const numerator = parseInt(packet.module) ?? 0;
                 const denominator = parseInt(packet.modules) ?? 0;
