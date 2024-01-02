@@ -272,10 +272,10 @@ async function onParameterEditorClick() {
         .val(extensionSettings?.modelParams?.ropeAlpha ?? 1.0);
     parameterHtml
         .find('input[name="draft_rope_scale"]')
-        .val(extensionSettings?.modelParams?.draft.draft_ropeScale ?? 1.0);
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeScale ?? 1.0);
     parameterHtml
         .find('input[name="draft_rope_alpha"]')
-        .val(extensionSettings?.modelParams?.draft.draft_ropeAlpha ?? 1.0);
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 1.0);
     parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
@@ -316,7 +316,7 @@ async function onParameterEditorClick() {
 
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
-        try {
+        try { 
             const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
             if (Array.isArray(gpuSplitArray)) {
                 newParams['gpuSplit'] = gpuSplitArray;
