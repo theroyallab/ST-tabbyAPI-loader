@@ -15,6 +15,7 @@ const defaultSettings = {};
 
 // Cached models list
 let models = [];
+let draftModels = [];
 
 // Check if user is connected to TabbyAPI
 function verifyTabby(logError = true) {
@@ -29,7 +30,7 @@ function verifyTabby(logError = true) {
 // Fetch a cleaned URL
 // Use the override if specified
 function getTabbyURL() {
-    const apiUrl = $("#tabby_api_url_text").val()
+    const apiUrl = $('#tabby_api_url_text').val();
     let url = extensionSettings?.urlOverride ? extensionSettings.urlOverride : apiUrl;
     if (extensionSettings?.useProxy) {
         url = `/proxy/${url}`;
@@ -73,10 +74,9 @@ async function fetchModels() {
         console.error('TabbyLoader: Could not connect to TabbyAPI');
         return;
     }
-
+    var models, draftModels;
     // Remove trailing URL slash
     const apiUrl = getTabbyURL();
-
     try {
         const authToken = await getTabbyAuth();
         if (!authToken) {
@@ -90,14 +90,25 @@ async function fetchModels() {
         });
 
         if (response.ok) {
-            const models = await response.json();
-
-            return models.data.map((e) => e.id);
+            models = await response.json();
         } else {
             console.error(`Request to /v1/model/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
-
             return [];
         }
+
+        const draftModelListResponse = await fetch(`${apiUrl}/v1/model/draft/list`, {
+            headers: {
+                'X-api-key': authToken,
+            },
+        });
+
+        if (draftModelListResponse.ok) {
+            draftModels = await draftModelListResponse.json();
+        } else {
+            console.error(`Request to /v1/model/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
+            return [];
+        }
+        return [models.data.map((e) => e.id), draftModels.data.map((e) => e.id)];
     } catch (error) {
         console.error(error);
 
@@ -112,10 +123,16 @@ async function onLoadModelClick() {
     }
 
     const modelValue = $('#model_list').val();
+    const draftModelValue = $('#draft_model_list').val();
 
     if (!modelValue || !models.includes(modelValue)) {
         toastr.error('TabbyLoader: Please make sure the model name is spelled correctly before loading!');
 
+        return;
+    }
+
+    if (draftModelValue !== '' && !models.includes(draftModelValue)) {
+        toastr.error('TabbyLoader: Please make sure the draft model name is spelled correctly before loading!');
         return;
     }
 
@@ -130,6 +147,14 @@ async function onLoadModelClick() {
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.eightBitCache ?? false ? 'FP8' : 'FP16',
     };
+
+    if (draftModelValue) {
+        body.draft = {
+            draft_model_name: draftModelValue,
+            draft_rope_scale: extensionSettings?.modelParams?.draft.draft_ropeAlpha,
+            draft_rope_alpha: extensionSettings?.modelParams?.draft.draft_ropeScale,
+        };
+    }
 
     if (!body.gpu_split_auto) {
         // TODO: Add a check for an empty array here
@@ -150,7 +175,7 @@ async function onLoadModelClick() {
 
         return;
     }
-
+    console.log(body);
     try {
         const response = await fetch(`${tabbyURL}/v1/model/load`, {
             method: 'POST',
@@ -162,26 +187,35 @@ async function onLoadModelClick() {
             body: JSON.stringify(body),
         });
 
+        console.log(response);
         if (response.ok) {
             const eventStream = new EventSourceStream();
             response.body.pipeThrough(eventStream);
             const reader = eventStream.readable.getReader();
             const progressContainer = $('#loading_progress_container').hide();
             progressContainer.show();
-
+            let soFar = 0;
+            let times;
+            draftModelValue ? times = 2 : times = 1;
             while (true) {
                 const { value, done } = await reader.read();
-                if (done) break;
+                console.log(soFar, times);
+                if (done && soFar === times) break;
 
                 const packet = JSON.parse(value.data);
-
                 const numerator = parseInt(packet.module) ?? 0;
                 const denominator = parseInt(packet.modules) ?? 0;
                 const percent = numerator / denominator * 100;
 
                 if (packet.status === 'finished') {
-                    toastr.info('TabbyLoader: Model loaded');
-                    progressContainer.hide();
+                    if (soFar === times - 1) {
+                        progressContainer.hide();
+                        toastr.info('TabbyLoader: Model loaded');
+                    } else {
+                        $('#loading_progressbar').progressbar('value', 0);
+                        toastr.info('TabbyLoader: Draft Model loaded');
+                    }
+                    soFar++;
                 } else {
                     $('#loading_progressbar').progressbar('value', Math.round(percent ?? 0));
                 }
@@ -237,6 +271,12 @@ async function onParameterEditorClick() {
         .find('input[name="rope_alpha"]')
         .val(extensionSettings?.modelParams?.ropeAlpha ?? 1.0);
     parameterHtml
+        .find('input[name="draft_rope_scale"]')
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeScale ?? 1.0);
+    parameterHtml
+        .find('input[name="draft_rope_alpha"]')
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 1.0);
+    parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
     parameterHtml
@@ -265,6 +305,10 @@ async function onParameterEditorClick() {
             maxSeqLen: parameterHtml.find('input[name="max_seq_len"]').val(),
             ropeScale: parameterHtml.find('input[name="rope_scale"]').val(),
             ropeAlpha: parameterHtml.find('input[name="rope_alpha"]').val(),
+            draft: {
+                draft_ropeScale: parameterHtml.find('input[name="draft_rope_scale"]').val(),
+                draft_ropeAlpha: parameterHtml.find('input[name="draft_rope_alpha"]').val(),
+            },
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
             eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
@@ -272,7 +316,7 @@ async function onParameterEditorClick() {
 
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
-        try {
+        try { 
             const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
             if (Array.isArray(gpuSplitArray)) {
                 newParams['gpuSplit'] = gpuSplitArray;
@@ -311,11 +355,13 @@ async function loadSettings() {
 jQuery(async () => {
     // This is an example of loading HTML from a file
     const settingsHtml = await $.get(`${extensionFolderPath}/dropdown.html`);
-    models = await fetchModels();
+    let allmodels = await fetchModels();
+    models = allmodels[0]
+    draftModels = allmodels[1]
 
     // Append settingsHtml to extensions_settings
     // extension_settings and extensions_settings2 are the left and right columns of the settings menu
-    // Left should be extensions that deal with system functions and right should be visual/UI related 
+    // Left should be extensions that deal with system functions and right should be visual/UI related
     $('#extensions_settings').append(settingsHtml);
 
     $('#model_list')
@@ -325,7 +371,22 @@ jQuery(async () => {
             },
             minLength: 0,
         })
-        .focus(function() {
+        .focus(function () {
+            $(this)
+                .autocomplete(
+                    'search',
+                    $(this).val(),
+                );
+        });
+
+    $('#draft_model_list')
+        .autocomplete({
+            source: (_, response) => {
+                return response(draftModels);
+            },
+            minLength: 0,
+        })
+        .focus(function () {
             $(this)
                 .autocomplete(
                     'search',
@@ -348,7 +409,9 @@ jQuery(async () => {
 
     $('#reload_model_list_button').on('click', async function () {
         if (verifyTabby()) {
-            models = await fetchModels();
+            let allmodels = await fetchModels();
+            models = allmodels[0]
+            draftModels = allmodels[1]
         }
     });
 
@@ -371,7 +434,7 @@ jQuery(async () => {
         }
     });
 
-    $('#tabby_use_proxy').on('input', function() {
+    $('#tabby_use_proxy').on('input', function () {
         extensionSettings.useProxy = !!$(this).prop('checked');
         saveSettingsDebounced();
     });
