@@ -355,7 +355,9 @@ async function loadSettings() {
 jQuery(async () => {
     // This is an example of loading HTML from a file
     const settingsHtml = await $.get(`${extensionFolderPath}/dropdown.html`);
-    [models, draftModels] = await fetchModels();
+    let allmodels = await fetchModels();
+    models = allmodels[0]
+    draftModels = allmodels[1]
 
     // Append settingsHtml to extensions_settings
     // extension_settings and extensions_settings2 are the left and right columns of the settings menu
@@ -407,7 +409,9 @@ jQuery(async () => {
 
     $('#reload_model_list_button').on('click', async function () {
         if (verifyTabby()) {
-            models = await fetchModels();
+            let allmodels = await fetchModels();
+            models = allmodels[0]
+            draftModels = allmodels[1]
         }
     });
 
