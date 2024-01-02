@@ -1,4 +1,3 @@
-
 <div id="tabby_loader_popup">
     <div>
         <h3><strong data-i18n="">Set Parameters</strong>
@@ -13,6 +12,7 @@
         <hr />
 
         <!-- Model parameter textboxes -->
+        Main Model
         <div class="flex-container">
             <div class="flex1">
                 <label for="max_seq_len">
@@ -33,18 +33,33 @@
                 <input name="rope_alpha" class="text_pole" type="text" />
             </div>
         </div>
+        Draft Model
+        <div class="flex-container">
+            <div class="flex1">
+                <label for="rope_scale">
+                    <small data-i18n="Rope Scale">Rope Scale</small>
+                </label>
+                <input name="draft_rope_scale" class="text_pole" type="text" />
+            </div>
+            <div class="flex1">
+                <label for="rope_alpha">
+                    <small data-i18n="Rope Alpha">Rope Alpha</small>
+                </label>
+                <input name="draft_rope_alpha" class="text_pole" type="text" />
+            </div>
+        </div>
 
         <!-- Container for GPU Split and other options -->
         <div class="flex-container">
             <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small class="justifyCenter">GPU Split</small>
                 <label class="checkbox flex-container">
-                    <input type="checkbox" name="gpu_split_auto"/>
+                    <input type="checkbox" name="gpu_split_auto" />
                     <span data-i18n="Auto Split">Auto Split</span>
                 </label>
                 <input name="gpu_split_value" class="text_pole" type="text" placeholder="ex. [20.6, 24]" />
             </div>
-    
+
             <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small>Other Options</small>
                 <label class="checkbox flex-container">
