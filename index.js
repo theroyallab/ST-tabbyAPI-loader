@@ -131,7 +131,7 @@ async function onLoadModelClick() {
         return;
     }
 
-    if (draftModelValue !== '' && !models.includes(draftModelValue)) {
+    if (draftModelValue !== '' && !draftModels.includes(draftModelValue)) {
         toastr.error('TabbyLoader: Please make sure the draft model name is spelled correctly before loading!');
         return;
     }
@@ -146,6 +146,7 @@ async function onLoadModelClick() {
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.eightBitCache ?? false ? 'FP8' : 'FP16',
+        use_cfg: extensionSettings?.modelParams?.useCfg,
     };
 
     if (draftModelValue) {
@@ -175,7 +176,7 @@ async function onLoadModelClick() {
 
         return;
     }
-    console.log(body);
+
     try {
         const response = await fetch(`${tabbyURL}/v1/model/load`, {
             method: 'POST',
@@ -187,7 +188,6 @@ async function onLoadModelClick() {
             body: JSON.stringify(body),
         });
 
-        console.log(response);
         if (response.ok) {
             const eventStream = new EventSourceStream();
             response.body.pipeThrough(eventStream);
@@ -282,6 +282,9 @@ async function onParameterEditorClick() {
     parameterHtml
         .find('input[name="eight_bit_cache"]')
         .prop('checked', extensionSettings?.modelParams?.eightBitCache ?? false);
+    parameterHtml
+        .find('input[name="use_cfg"]')
+        .prop('checked', extensionSettings?.modelParams?.useCfg ?? false);
 
     // MARK: GPU split options
     const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
@@ -312,6 +315,7 @@ async function onParameterEditorClick() {
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
             eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
+            useCfg: parameterHtml.find('input[name="use_cfg"]').prop('checked'),
         };
 
         // Handle GPU split setting
