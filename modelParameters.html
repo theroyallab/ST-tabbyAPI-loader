@@ -33,21 +33,37 @@
                 <input name="rope_alpha" class="text_pole" type="text" />
             </div>
         </div>
-        Draft Model
         <div class="flex-container">
-            <div class="flex1">
-                <label for="rope_scale">
-                    <small data-i18n="Rope Scale">Rope Scale</small>
-                </label>
-                <input name="draft_rope_scale" class="text_pole" type="text" />
+            <div class="flex-container flex1 flexFlowColumn">
+                Draft Model
+                <div class="flex-container">
+                    <div class="flex1">
+                        <label for="rope_scale">
+                            <small data-i18n="Rope Scale">Rope Scale</small>
+                        </label>
+                        <input name="draft_rope_scale" class="text_pole" type="text" />
+                    </div>
+                    <div class="flex1">
+                        <label for="rope_alpha">
+                            <small data-i18n="Rope Alpha">Rope Alpha</small>
+                        </label>
+                        <input name="draft_rope_alpha" class="text_pole" type="text" />
+                    </div>
+                </div>
             </div>
-            <div class="flex1">
-                <label for="rope_alpha">
-                    <small data-i18n="Rope Alpha">Rope Alpha</small>
-                </label>
-                <input name="draft_rope_alpha" class="text_pole" type="text" />
+            <div class="flex-container flex1 flexFlowColumn">
+                Lora
+                <div class="flex-container flex1">
+                    <div class="flex1">
+                        <label for="rope_scale">
+                            <small data-i18n="Rope Scale">Lora Strength</small>
+                        </label>
+                        <input id="lora_scale" name="lora_scale" class="text_pole flex1 wide100p" placeholder="Integer Required" maxlength="100" size="5" min="0" max="10" value="">
+                    </div>
+                </div>
             </div>
         </div>
+
 
         <!-- Container for GPU Split and other options -->
         <div class="flex-container">
@@ -68,7 +84,11 @@
                 </label>
                 <label class="checkbox flex-container">
                     <input type="checkbox" name="eight_bit_cache" />
-                    <span data-i18n="Disable FA2">8-bit Cache</span>
+                    <span data-i18n="8-bit Cache">8-bit Cache</span>
+                </label>
+                <label class="checkbox flex-container">
+                    <input type="checkbox" name="use_cfg" />
+                    <span data-i18n="Use CFG">Use CFG</span>
                 </label>
             </div>
         </div>
