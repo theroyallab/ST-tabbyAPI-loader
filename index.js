@@ -221,7 +221,6 @@ async function onLoadModelClick() {
             let times = 1;
 
             if (draftModelValue) { times++; }
-            if (loraModelValue) { times++; }
 
             console.debug(`TabbyLoader: need to loop ${times} times`);
 
