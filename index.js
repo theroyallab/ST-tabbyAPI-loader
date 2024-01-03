@@ -16,6 +16,10 @@ const defaultSettings = {};
 // Cached models list
 let models = [];
 let draftModels = [];
+let loraModels = [];
+let loraReqBody = {};
+let shouldLoadLora = false;
+
 
 // Check if user is connected to TabbyAPI
 function verifyTabby(logError = true) {
@@ -74,7 +78,7 @@ async function fetchModels() {
         console.error('TabbyLoader: Could not connect to TabbyAPI');
         return;
     }
-    var models, draftModels;
+    var models, draftModels, loraModels;
     // Remove trailing URL slash
     const apiUrl = getTabbyURL();
     try {
@@ -105,10 +109,23 @@ async function fetchModels() {
         if (draftModelListResponse.ok) {
             draftModels = await draftModelListResponse.json();
         } else {
-            console.error(`Request to /v1/model/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
+            console.error(`Request to /v1/model/draft/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
             return [];
         }
-        return [models.data.map((e) => e.id), draftModels.data.map((e) => e.id)];
+
+        const loraModelListResponse = await fetch(`${apiUrl}/v1/lora/list`, {
+            headers: {
+                'X-api-key': authToken,
+            },
+        });
+
+        if (loraModelListResponse.ok) {
+            loraModels = await loraModelListResponse.json();
+        } else {
+            console.error(`Request to /v1/lora/list failed with a statuscode of ${response.status}:\n${response.statusText}`);
+            return [];
+        }
+        return [models.data.map((e) => e.id), draftModels.data.map((e) => e.id), loraModels.data.map((e) => e.id)];
     } catch (error) {
         console.error(error);
 
@@ -124,6 +141,7 @@ async function onLoadModelClick() {
 
     const modelValue = $('#model_list').val();
     const draftModelValue = $('#draft_model_list').val();
+    const loraModelValue = $('#lora_model_list').val();
 
     if (!modelValue || !models.includes(modelValue)) {
         toastr.error('TabbyLoader: Please make sure the model name is spelled correctly before loading!');
@@ -131,8 +149,13 @@ async function onLoadModelClick() {
         return;
     }
 
-    if (draftModelValue !== '' && !models.includes(draftModelValue)) {
+    if (draftModelValue !== '' && !draftModels.includes(draftModelValue)) {
         toastr.error('TabbyLoader: Please make sure the draft model name is spelled correctly before loading!');
+        return;
+    }
+
+    if (loraModelValue !== '' && !loraModels.includes(loraModelValue)) {
+        toastr.error('TabbyLoader: Please make sure the lora name is spelled correctly before loading!');
         return;
     }
 
@@ -146,6 +169,7 @@ async function onLoadModelClick() {
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.eightBitCache ?? false ? 'FP8' : 'FP16',
+        use_cfg: extensionSettings?.modelParams?.useCfg,
     };
 
     if (draftModelValue) {
@@ -175,7 +199,7 @@ async function onLoadModelClick() {
 
         return;
     }
-    console.log(body);
+
     try {
         const response = await fetch(`${tabbyURL}/v1/model/load`, {
             method: 'POST',
@@ -187,7 +211,6 @@ async function onLoadModelClick() {
             body: JSON.stringify(body),
         });
 
-        console.log(response);
         if (response.ok) {
             const eventStream = new EventSourceStream();
             response.body.pipeThrough(eventStream);
@@ -195,11 +218,16 @@ async function onLoadModelClick() {
             const progressContainer = $('#loading_progress_container').hide();
             progressContainer.show();
             let soFar = 0;
-            let times;
-            draftModelValue ? times = 2 : times = 1;
+            let times = 1;
+
+            if (draftModelValue) { times++; }
+            if (loraModelValue) { times++; }
+
+            console.debug(`TabbyLoader: need to loop ${times} times`);
+
             while (true) {
                 const { value, done } = await reader.read();
-                console.log(soFar, times);
+                console.debug(`TabbyLoader: On loop ${soFar} of ${times}`);
                 if (done && soFar === times) break;
 
                 const packet = JSON.parse(value.data);
@@ -208,12 +236,18 @@ async function onLoadModelClick() {
                 const percent = numerator / denominator * 100;
 
                 if (packet.status === 'finished') {
-                    if (soFar === times - 1) {
+                    if (times === 1) {
                         progressContainer.hide();
                         toastr.info('TabbyLoader: Model loaded');
-                    } else {
+                        break;
+                    }
+                    if (soFar === times - 2 && times === 2) { // model+draft
                         $('#loading_progressbar').progressbar('value', 0);
                         toastr.info('TabbyLoader: Draft Model loaded');
+                    } else if (times === 2) {
+                        progressContainer.hide();
+                        toastr.info('TabbyLoader: Model loaded');
+                        break;
                     }
                     soFar++;
                 } else {
@@ -223,7 +257,7 @@ async function onLoadModelClick() {
         } else {
             const responseJson = await response.json();
             console.error('TabbyLoader: Could not load the model because:\n', responseJson?.detail ?? response.statusText);
-            toastr.error('TabbyLoader: Could not load the model. Please check the JavaScript or TabbyAPI console for details.');
+            toastr.error(`TabbyLoader: Could not load the model because: ${responseJson?.detail ?? response.statusText}`);
         }
     } catch (error) {
         console.error('TabbyLoader: Could not load the model because:\n', error);
@@ -231,6 +265,75 @@ async function onLoadModelClick() {
     } finally {
         $('#loading_progressbar').progressbar('value', 0);
         $('#loading_progress_container').hide();
+    }
+}
+
+async function loadLora() {
+    const loraModelValue = $('#lora_model_list').val();
+    if (!loraModelValue) {
+        toastr.error("TabbyLoader: No lora selected!");
+        return;
+    }
+    const tabbyURL = getTabbyURL();
+    const authToken = await getTabbyAuth();
+    if (!authToken) {
+        // eslint-disable-next-line
+        toastr.error("TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box.");
+        return;
+    }
+
+    loraReqBody.loras = [
+        {
+            name: loraModelValue,
+            scaling: extensionSettings?.loraAPICallParams?.lora.scaling,
+        },
+    ];
+
+    $('#loraLoadingNotification').show();
+    const response = await fetch(`${tabbyURL}/v1/lora/load`, {
+        method: 'POST',
+        credentials: 'include',
+        headers: {
+            ...getRequestHeaders(),
+            'X-admin-key': authToken,
+        },
+        body: JSON.stringify(loraReqBody),
+    });
+
+    if (response.ok) {
+        toastr.info('TabbyLoader: Lora loaded');
+
+    } else {
+        const responseJson = await response.json();
+        console.error('TabbyLoader: Could not load the lora because:\n', responseJson?.detail ?? response.statusText);
+        toastr.error(`TabbyLoader: Could not load the lora because: ${responseJson?.detail ?? response.statusText}`);
+    }
+    $('#loraLoadingNotification').hide();
+    shouldLoadLora = false;
+}
+
+async function unloadLora() {
+    verifyTabby();
+    const tabbyURL = getTabbyURL();
+
+    const authToken = await getTabbyAuth();
+    if (!authToken) {
+        return;
+    }
+
+    const response = await fetch(`${tabbyURL}/v1/lora/unload`, {
+        method: 'GET',
+        headers: {
+            'X-admin-key': authToken,
+        },
+    });
+
+    if (response.ok) {
+        toastr.info('TabbyLoader: Lora unloaded');
+    } else {
+        const responseJson = await response.json();
+        console.error('TabbyLoader: Could not unload the lora because:\n', responseJson?.detail ?? response.statusText);
+        toastr.error(`TabbyLoader: Could not unload the lora because: ${responseJson?.detail ?? response.statusText}`);
     }
 }
 
@@ -255,7 +358,7 @@ async function onUnloadModelClick() {
     } else {
         const responseJson = await response.json();
         console.error('TabbyLoader: Could not unload the model because:\n', responseJson?.detail ?? response.statusText);
-        toastr.error('Could not unload the model. Please check the JavaScript or TabbyAPI console for details.');
+        toastr.error(`Could not unload the model because: ${responseJson?.detail ?? response.statusText}`);
     }
 }
 
@@ -277,11 +380,17 @@ async function onParameterEditorClick() {
         .find('input[name="draft_rope_alpha"]')
         .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 1.0);
     parameterHtml
+        .find('input[name="lora_scale"]')
+        .val(extensionSettings?.modelParams?.lora?.scaling ?? 1.0);
+    parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
     parameterHtml
         .find('input[name="eight_bit_cache"]')
         .prop('checked', extensionSettings?.modelParams?.eightBitCache ?? false);
+    parameterHtml
+        .find('input[name="use_cfg"]')
+        .prop('checked', extensionSettings?.modelParams?.useCfg ?? false);
 
     // MARK: GPU split options
     const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
@@ -312,11 +421,19 @@ async function onParameterEditorClick() {
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
             eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
+            useCfg: parameterHtml.find('input[name="use_cfg"]').prop('checked'),
+        };
+
+        const loraAPICallParams = {
+            loras: {
+                name: parameterHtml.find('input[name="lora_model_list"]').val(),
+                scaling: parameterHtml.find('input[name="lora_scale"]').val(),
+            },
         };
 
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
-        try { 
+        try {
             const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
             if (Array.isArray(gpuSplitArray)) {
                 newParams['gpuSplit'] = gpuSplitArray;
@@ -329,7 +446,7 @@ async function onParameterEditorClick() {
             newParams['gpuSplit'] = [];
         }
 
-        Object.assign(extensionSettings, { modelParams: newParams });
+        Object.assign(extensionSettings, { modelParams: newParams, loraParams: loraAPICallParams });
         saveSettingsDebounced();
     }
 }
@@ -356,8 +473,9 @@ jQuery(async () => {
     // This is an example of loading HTML from a file
     const settingsHtml = await $.get(`${extensionFolderPath}/dropdown.html`);
     let allmodels = await fetchModels();
-    models = allmodels[0]
-    draftModels = allmodels[1]
+    models = allmodels[0];
+    draftModels = allmodels[1];
+    loraModels = allmodels[2];
 
     // Append settingsHtml to extensions_settings
     // extension_settings and extensions_settings2 are the left and right columns of the settings menu
@@ -394,6 +512,21 @@ jQuery(async () => {
                 );
         });
 
+    $('#lora_model_list')
+        .autocomplete({
+            source: (_, response) => {
+                return response(loraModels);
+            },
+            minLength: 0,
+        })
+        .focus(function () {
+            $(this)
+                .autocomplete(
+                    'search',
+                    $(this).val(),
+                );
+        });
+
     // These are examples of listening for events
     $('#load_model_button').on('click', function () {
         if (verifyTabby()) {
@@ -407,11 +540,25 @@ jQuery(async () => {
         }
     });
 
+    $('#load_lora_button').on('click', function () {
+        if (verifyTabby()) {
+            loadLora();
+        }
+    });
+
+    $('#unload_lora_button').on('click', function () {
+        if (verifyTabby()) {
+            unloadLora();
+        }
+    });
+
+
     $('#reload_model_list_button').on('click', async function () {
         if (verifyTabby()) {
             let allmodels = await fetchModels();
-            models = allmodels[0]
-            draftModels = allmodels[1]
+            models = allmodels[0];
+            draftModels = allmodels[1];
+            loraModels = allmodels[2];
         }
     });
 
@@ -447,6 +594,8 @@ jQuery(async () => {
     $('#open_parameter_editor').on('click', function () {
         onParameterEditorClick();
     });
+
+    $('#loraLoadingNotification').hide();
 
     // Load settings when starting things up (if you have any)
     await loadSettings();
