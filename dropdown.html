@@ -26,33 +26,44 @@
             </div>
 
             <hr />
-            <div class="flex-container">
+            <div class="flex-container justifySpaceBetween">
                 <h4 data-i18n="Tabby API key">Model Select</h4>
                 <div id="reload_model_list_button" title="Refresh model list" data-i18n="[title]Refresh model list" class="menu_button fa-lg fa-solid fa-repeat"></div>
-            </div>
-
-            <small>Make sure an admin key is set to avoid errors.</small>
-            <div class="flex-container flexFlowColumn">
-                <input id="model_list" name="model_list" class="text_pole flex1 wide100p" placeholder="Model name here" maxlength="100" size="35" value="" autocomplete="off">
-                <input id="draft_model_list" name="draft_model_list" class="text_pole flex1 wide100p" placeholder="Draft model name here" maxlength="100" size="35" value="" autocomplete="off">
-            </div>
-            <div id="loading_progress_container" class="progress_container">
-                <div id="loading_progressbar"></div>
-            </div>
-
-            <div class="flex-container">
-                <input id="load_model_button" class="menu_button" type="submit" value="Load" />
-                <input id="unload_model_button" class="menu_button" type="button" value="Unload" />
 
                 <div id="open_parameter_editor" class="menu_button">
                     <i class="fa-solid fa-pen-to-square"></i>
                     <span>Open Editor</span>
                 </div>
             </div>
-            <hr class="sysHR" />
+
+            <small>Make sure an admin key is set to avoid errors.</small>
+            <div class="flex-container flexFlowColumn">
+                <input id="model_list" name="model_list" class="text_pole flex1 wide100p" placeholder="Model name here" maxlength="100" size="35" value="" autocomplete="off">
+                <input id="draft_model_list" name="draft_model_list" class="text_pole flex1 wide100p" placeholder="Draft model name here" maxlength="100" size="35" value="" autocomplete="off">
+                <div id="loading_progress_container" class="progress_container">
+                    <div id="loading_progressbar"></div>
+                </div>
+                <div class="flex-container">
+                    <input id="load_model_button" class="menu_button" type="submit" value="Load Model(& Draft)" />
+                    <input id="unload_model_button" class="menu_button" type="button" value="Unload Model & Draft" />
+
+                </div>
+                <div class="flex-container flexFlowColumn">
+                    <input id="lora_model_list" name="lora_model_list" class="text_pole flex1 wide100p" placeholder="Lora name here" maxlength="100" size="30" value="" autocomplete="off">
+                    <div id="loraLoadingNotification">Loading Lora.....<i class="fa-solid fa-spinner fa-spin"></i></div>
+                    <div class="flex-container">
+                        <input id="load_lora_button" class="menu_button" type="submit" value="Load Lora" />
+                        <input id="unload_lora_button" class="menu_button" type="button" value="Unload Lora" />
+                    </div>
+                </div>
+
+
+
+
+                <hr class="sysHR" />
+            </div>
+
+
         </div>
-
-
     </div>
-</div>
 </div>
