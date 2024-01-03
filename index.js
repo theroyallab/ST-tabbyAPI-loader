@@ -18,6 +18,7 @@ let models = [];
 let draftModels = [];
 let loraModels = [];
 let loraReqBody = {};
+let loraAPICallParams;
 let shouldLoadLora = false;
 
 
@@ -280,11 +281,10 @@ async function loadLora() {
         toastr.error("TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box.");
         return;
     }
-
     loraReqBody.loras = [
         {
             name: loraModelValue,
-            scaling: extensionSettings?.loraAPICallParams?.lora.scaling,
+            scaling: extensionSettings?.loraParams?.loras.scaling,
         },
     ];
 
@@ -380,7 +380,7 @@ async function onParameterEditorClick() {
         .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 1.0);
     parameterHtml
         .find('input[name="lora_scale"]')
-        .val(extensionSettings?.modelParams?.lora?.scaling ?? 1.0);
+        .val(extensionSettings?.loraParams?.loras.scaling ?? 1.0);
     parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
@@ -422,8 +422,8 @@ async function onParameterEditorClick() {
             eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
             useCfg: parameterHtml.find('input[name="use_cfg"]').prop('checked'),
         };
-
-        const loraAPICallParams = {
+        console.log(parameterHtml.find('input[name="lora_scale"]').val())
+        loraAPICallParams = {
             loras: {
                 name: parameterHtml.find('input[name="lora_model_list"]').val(),
                 scaling: parameterHtml.find('input[name="lora_scale"]').val(),
@@ -433,20 +433,22 @@ async function onParameterEditorClick() {
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
         try {
-            const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
-            if (Array.isArray(gpuSplitArray)) {
-                newParams['gpuSplit'] = gpuSplitArray;
-            } else {
-                console.error(`Provided GPU split value (${gpuSplitArray}) is not an array.`);
-                newParams['gpuSplit'] = [];
+            if (gpuSplitVal) {
+                const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
+                if (Array.isArray(gpuSplitArray)) {
+                    newParams['gpuSplit'] = gpuSplitArray;
+                } else {
+                    console.error(`Provided GPU split value (${gpuSplitArray}) is not an array.`);
+                    newParams['gpuSplit'] = [];
+                }
             }
-        } catch (error) {
+            Object.assign(extensionSettings, { modelParams: newParams, loraParams: loraAPICallParams });
+            saveSettingsDebounced();
+        }
+        catch (error) {
             console.error(error);
             newParams['gpuSplit'] = [];
         }
-
-        Object.assign(extensionSettings, { modelParams: newParams, loraParams: loraAPICallParams });
-        saveSettingsDebounced();
     }
 }
 
