@@ -359,14 +359,19 @@ async function loadSettings() {
 jQuery(async () => {
     // This is an example of loading HTML from a file
     const settingsHtml = await $.get(`${extensionFolderPath}/dropdown.html`);
-    let allmodels = await fetchModels();
-    models = allmodels[0]
-    draftModels = allmodels[1]
 
     // Append settingsHtml to extensions_settings
     // extension_settings and extensions_settings2 are the left and right columns of the settings menu
     // Left should be extensions that deal with system functions and right should be visual/UI related
     $('#extensions_settings').append(settingsHtml);
+
+    try {
+        let allmodels = await fetchModels();
+        models = allmodels[0]
+        draftModels = allmodels[1]
+    }catch(error) {
+        console.error(error)
+    }
 
     $('#model_list')
         .autocomplete({
