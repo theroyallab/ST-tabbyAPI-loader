@@ -14,17 +14,17 @@ Bridges the gap for model loading between TabbyAPI and SillyTavern without the n
 
 ## Features and Planned Features
 
-- Model loading
+- ~~Model loading~~
 
-- Model unloading
+- ~~Model unloading~~
 
-- Configure model parameters
+- ~~Configure model parameters~~
 
 - Create config presets that can be applied across models
 
-- Speculative decoding
+- ~~Speculative decoding~~
 
-- Lora support (once it's in TabbyAPI itself)
+- Lora support
 
 ## Prerequisites
 
