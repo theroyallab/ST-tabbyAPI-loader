@@ -246,6 +246,7 @@ async function onUnloadModelClick() {
     const response = await fetch(`${tabbyURL}/v1/model/unload`, {
         method: 'POST',
         headers: {
+            ...getRequestHeaders(),
             'X-admin-key': authToken,
         },
     });
