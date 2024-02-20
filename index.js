@@ -370,7 +370,7 @@ jQuery(async () => {
         let allmodels = await fetchModels();
         models = allmodels[0]
         draftModels = allmodels[1]
-    }catch(error) {
+    } catch(error) {
         console.error(error)
     }
 
