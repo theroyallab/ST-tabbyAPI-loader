@@ -151,9 +151,9 @@ async function onLoadModelClick() {
 
     const body = {
         name: modelValue,
-        max_seq_len: extensionSettings?.modelParams?.maxSeqLen,
-        rope_scale: extensionSettings?.modelParams?.ropeScale,
-        rope_alpha: extensionSettings?.modelParams?.ropeAlpha,
+        max_seq_len: Number(extensionSettings?.modelParams?.maxSeqLen) || 0,
+        rope_scale: Number(extensionSettings?.modelParams?.ropeScale) || null,
+        rope_alpha: Number(extensionSettings?.modelParams?.ropeScale) || null,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.cacheMode,
@@ -164,8 +164,8 @@ async function onLoadModelClick() {
     if (draftModelValue) {
         body.draft = {
             draft_model_name: draftModelValue,
-            draft_rope_scale: extensionSettings?.modelParams?.draft.draft_ropeAlpha,
-            draft_rope_alpha: extensionSettings?.modelParams?.draft.draft_ropeScale,
+            draft_rope_scale: Number(extensionSettings?.modelParams?.draft.draft_ropeAlpha) || null,
+            draft_rope_alpha: Number(extensionSettings?.modelParams?.draft.draft_ropeScale) || null,
         };
     }
 
@@ -280,18 +280,6 @@ async function onParameterEditorClick() {
         .find('input[name="max_seq_len"]')
         .val(extensionSettings?.modelParams?.maxSeqLen ?? 4096);
     parameterHtml
-        .find('input[name="rope_scale"]')
-        .val(extensionSettings?.modelParams?.ropeScale ?? 1.0);
-    parameterHtml
-        .find('input[name="rope_alpha"]')
-        .val(extensionSettings?.modelParams?.ropeAlpha ?? 1.0);
-    parameterHtml
-        .find('input[name="draft_rope_scale"]')
-        .val(extensionSettings?.modelParams?.draft?.draft_ropeScale ?? 1.0);
-    parameterHtml
-        .find('input[name="draft_rope_alpha"]')
-        .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 1.0);
-    parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
     parameterHtml
@@ -303,6 +291,20 @@ async function onParameterEditorClick() {
     parameterHtml
         .find('select[name="cache_mode_select"]')
         .val(cache_mode[extensionSettings?.modelParams?.cacheMode ?? "FP16"])
+
+    // Rope and Draft rope
+    parameterHtml
+        .find('input[name="rope_scale"]')
+        .val(extensionSettings?.modelParams?.ropeScale ?? 'Auto');
+    parameterHtml
+        .find('input[name="rope_alpha"]')
+        .val(extensionSettings?.modelParams?.ropeAlpha ?? 'Auto');
+    parameterHtml
+        .find('input[name="draft_rope_scale"]')
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeScale ?? 'Auto');
+    parameterHtml
+        .find('input[name="draft_rope_alpha"]')
+        .val(extensionSettings?.modelParams?.draft?.draft_ropeAlpha ?? 'Auto');
 
     // MARK: GPU split options
     const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
@@ -323,12 +325,12 @@ async function onParameterEditorClick() {
     const popupResult = await callPopup(parameterHtml, 'confirm', undefined, { okButton: 'Save' });
     if (popupResult) {
         const newParams = {
-            maxSeqLen: parameterHtml.find('input[name="max_seq_len"]').val(),
-            ropeScale: parameterHtml.find('input[name="rope_scale"]').val(),
-            ropeAlpha: parameterHtml.find('input[name="rope_alpha"]').val(),
+            maxSeqLen: Number(parameterHtml.find('input[name="max_seq_len"]').val()) || 4096,
+            ropeScale: Number(parameterHtml.find('input[name="rope_scale"]').val()) || null,
+            ropeAlpha: Number(parameterHtml.find('input[name="rope_alpha"]').val()) || null,
             draft: {
-                draft_ropeScale: parameterHtml.find('input[name="draft_rope_scale"]').val(),
-                draft_ropeAlpha: parameterHtml.find('input[name="draft_rope_alpha"]').val(),
+                draft_ropeScale: Number(parameterHtml.find('input[name="draft_rope_scale"]').val()) || null,
+                draft_ropeAlpha: Number(parameterHtml.find('input[name="draft_rope_alpha"]').val()) || null,
             },
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
@@ -338,13 +340,13 @@ async function onParameterEditorClick() {
                 cache_mode,
                 Number(
                     parameterHtml.find('select[name="cache_mode_select"]').find(":selected").val()
-                ) ?? 0
+                ) || 0
             ),
         };
 
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
-        try { 
+        try {
             const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
             if (Array.isArray(gpuSplitArray)) {
                 newParams['gpuSplit'] = gpuSplitArray;
