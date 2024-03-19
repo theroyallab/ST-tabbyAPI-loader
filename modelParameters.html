@@ -50,7 +50,8 @@
         </div>
 
         <!-- Container for GPU Split and other options -->
-        <div class="flex-container">
+        Loader Options
+        <div class="flex-container padded-loader-setting-category">
             <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
                 <small class="justifyCenter">GPU Split</small>
                 <label class="checkbox flex-container">
@@ -60,20 +61,29 @@
                 <input name="gpu_split_value" class="text_pole" type="text" placeholder="ex. [20.6, 24]" />
             </div>
 
-            <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
+            <div class="flex-container flexFlowColumn flexNoGap alignitemsstart padded-loader-setting-block">
                 <small>Other Options</small>
                 <label class="checkbox flex-container">
                     <input type="checkbox" name="no_flash_attention" />
                     <span data-i18n="Disable FA2">Disable FA2</span>
                 </label>
                 <label class="checkbox flex-container">
-                    <input type="checkbox" name="eight_bit_cache" />
-                    <span data-i18n="8-bit Cache">8-bit Cache</span>
-                </label>
-                <label class="checkbox flex-container">
                     <input type="checkbox" name="use_cfg" />
                     <span data-i18n="Use CFG">Use CFG</span>
                 </label>
+                <label class="checkbox flex-container">
+                    <input type="checkbox" name="fasttensors" />
+                    <span data-i18n="FastTensors">FastTensors</span>
+                </label>
+            </div>
+
+            <div class="flex-container flexFlowColumn flexNoGap alignitemsstart">
+                <small class="justifyCenter">Cache Mode</small>
+                <select name="cache_mode_select" class="margin0">
+                    <option value="0">FP16</option>
+                    <option value="1">FP8</option>
+                    <option value="2">Q4</option>
+                </select>
             </div>
         </div>
     </div>

@@ -19,3 +19,12 @@
     flex-direction: row;
 }
 
+/* Couldn't figure out how to link these classes to the elements themselves */
+.padded-loader-setting-block {
+    padding-left: 10px;
+    padding-right: 10px;
+}
+
+.padded-loader-setting-category {
+    padding-top: 10px;
+}

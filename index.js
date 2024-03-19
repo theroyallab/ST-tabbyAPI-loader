@@ -17,6 +17,17 @@ const defaultSettings = {};
 let models = [];
 let draftModels = [];
 
+const cache_mode = {
+    FP16: 0,
+    FP8: 1,
+    Q4: 2,
+}
+
+// From https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
+function getKeyByValue(object, value) {
+    return Object.keys(object).find(key => object[key] === value);
+}  
+
 // Check if user is connected to TabbyAPI
 function verifyTabby(logError = true) {
     const result = online_status !== 'no_connection' || textgenerationwebui_settings.type === textgen_types.TABBY;
@@ -145,8 +156,9 @@ async function onLoadModelClick() {
         rope_alpha: extensionSettings?.modelParams?.ropeAlpha,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
-        cache_mode: extensionSettings?.modelParams?.eightBitCache ?? false ? 'FP8' : 'FP16',
+        cache_mode: extensionSettings?.modelParams?.cacheMode,
         use_cfg: extensionSettings?.modelParams?.useCfg,
+        fasttensors: extensionSettings?.modelParams?.fasttensors,
     };
 
     if (draftModelValue) {
@@ -172,7 +184,9 @@ async function onLoadModelClick() {
     const authToken = await getTabbyAuth();
     if (!authToken) {
         // eslint-disable-next-line
-        toastr.error("TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box.");
+        toastr.error(
+            "TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box."
+        );
 
         return;
     }
@@ -281,11 +295,14 @@ async function onParameterEditorClick() {
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
     parameterHtml
-        .find('input[name="eight_bit_cache"]')
-        .prop('checked', extensionSettings?.modelParams?.eightBitCache ?? false);
-    parameterHtml
         .find('input[name="use_cfg"]')
         .prop('checked', extensionSettings?.modelParams?.useCfg ?? false);
+    parameterHtml
+        .find('input[name="fasttensors"]')
+        .prop('checked', extensionSettings?.modelParams?.fasttensors ?? false);
+    parameterHtml
+        .find('select[name="cache_mode_select"]')
+        .val(cache_mode[extensionSettings?.modelParams?.cacheMode ?? "FP16"])
 
     // MARK: GPU split options
     const gpuSplitAuto = extensionSettings?.modelParams?.gpuSplitAuto ?? true;
@@ -315,8 +332,14 @@ async function onParameterEditorClick() {
             },
             noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
-            eightBitCache: parameterHtml.find('input[name="eight_bit_cache"]').prop('checked'),
+            fasttensors: parameterHtml.find('input[name="fasttensors"]').prop('checked'),
             useCfg: parameterHtml.find('input[name="use_cfg"]').prop('checked'),
+            cacheMode: getKeyByValue(
+                cache_mode,
+                Number(
+                    parameterHtml.find('select[name="cache_mode_select"]').find(":selected").val()
+                ) ?? 0
+            ),
         };
 
         // Handle GPU split setting
@@ -339,6 +362,25 @@ async function onParameterEditorClick() {
     }
 }
 
+function migrateSettings() {
+    let performSave = false;
+
+    if ('eightBitCache' in extensionSettings?.modelParams) {
+        const newParams = {
+            cacheMode: extensionSettings?.modelParams?.eightBitCache ? "FP8" : "FP16"
+        };
+
+        delete extensionSettings.modelParams.eightBitCache;
+        Object.assign(extensionSettings?.modelParams, newParams)
+
+        performSave = true;
+    }
+
+    if (performSave) {
+        saveSettingsDebounced();
+    }
+}
+
 async function loadSettings() {
     //Create the settings if they don't exist
 
@@ -347,6 +389,8 @@ async function loadSettings() {
         Object.assign(extension_settings[settingsName], defaultSettings);
         saveSettingsDebounced();
     }
+
+    migrateSettings();
 
     $('#tabby_url_override').val(extensionSettings?.urlOverride ?? '');
     $('#tabby_use_proxy').prop('checked', extensionSettings?.useProxy ?? false);
