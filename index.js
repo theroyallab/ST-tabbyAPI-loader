@@ -178,6 +178,8 @@ async function onLoadModelClick() {
         } else {
             console.error(`TabbyLoader: GPU split ${gpuSplit} is invalid. Set to auto or adjust your parameters!`);
             toastr.error('TabbyLoader: Invalid GPU split. Set GPU split to auto or adjust your parameters');
+
+            return;
         }
     }
 
