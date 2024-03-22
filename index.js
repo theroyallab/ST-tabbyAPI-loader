@@ -219,6 +219,11 @@ async function onLoadModelClick() {
                 if (done && soFar === times) break;
 
                 const packet = JSON.parse(value.data);
+
+                if (packet.error) {
+                    throw new Error(packet.error.message)
+                }
+
                 const numerator = parseInt(packet.module) ?? 0;
                 const denominator = parseInt(packet.modules) ?? 0;
                 const percent = numerator / denominator * 100;
