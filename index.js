@@ -8,7 +8,7 @@ const extensionName = 'ST-tabbyAPI-loader';
 // Used for settings
 const settingsName = 'tabbyLoader';
 const extensionFolderPath = `scripts/extensions/third-party/${extensionName}`;
-const extensionSettings = extension_settings[settingsName];
+let extensionSettings = extension_settings[settingsName];
 const defaultSettings = {};
 
 // TODO: Make a common tabbyRequest function
@@ -389,6 +389,10 @@ async function loadSettings() {
     extension_settings[settingsName] = extension_settings[settingsName] || {};
     if (Object.keys(extension_settings[settingsName]).length === 0) {
         Object.assign(extension_settings[settingsName], defaultSettings);
+
+        // Refresh the reference to the extension_settings object
+        extensionSettings = extension_settings[settingsName]
+
         saveSettingsDebounced();
     }
 
