@@ -153,7 +153,7 @@ async function onLoadModelClick() {
         name: modelValue,
         max_seq_len: Number(extensionSettings?.modelParams?.maxSeqLen) || 0,
         rope_scale: Number(extensionSettings?.modelParams?.ropeScale) || null,
-        rope_alpha: Number(extensionSettings?.modelParams?.ropeScale) || null,
+        rope_alpha: Number(extensionSettings?.modelParams?.ropeAlpha) || null,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.cacheMode,
