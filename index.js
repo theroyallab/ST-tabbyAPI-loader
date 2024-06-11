@@ -19,8 +19,9 @@ let draftModels = [];
 
 const cache_mode = {
     FP16: 0,
-    FP8: 1,
-    Q4: 2,
+    Q4: 1,
+    Q6: 2,
+    Q8: 3,
 }
 
 // From https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
@@ -153,7 +154,7 @@ async function onLoadModelClick() {
         name: modelValue,
         max_seq_len: Number(extensionSettings?.modelParams?.maxSeqLen) || 0,
         rope_scale: Number(extensionSettings?.modelParams?.ropeScale) || null,
-        rope_alpha: Number(extensionSettings?.modelParams?.ropeScale) || null,
+        rope_alpha: Number(extensionSettings?.modelParams?.ropeAlpha) || null,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.cacheMode,
