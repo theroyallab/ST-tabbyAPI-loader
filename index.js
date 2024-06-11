@@ -19,8 +19,9 @@ let draftModels = [];
 
 const cache_mode = {
     FP16: 0,
-    FP8: 1,
-    Q4: 2,
+    Q4: 1,
+    Q6: 2,
+    Q8: 3,
 }
 
 // From https://stackoverflow.com/questions/9907419/how-to-get-a-key-in-a-javascript-object-by-its-value
