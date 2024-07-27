@@ -354,12 +354,14 @@ async function onParameterEditorClick() {
         // Handle GPU split setting
         const gpuSplitVal = parameterHtml.find('input[name="gpu_split_value"]').val();
         try {
-            const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
-            if (Array.isArray(gpuSplitArray)) {
-                newParams['gpuSplit'] = gpuSplitArray;
-            } else {
-                console.error(`Provided GPU split value (${gpuSplitArray}) is not an array.`);
-                newParams['gpuSplit'] = [];
+            if (gpuSplitVal) {
+                const gpuSplitArray = JSON.parse(gpuSplitVal) ?? [];
+                if (Array.isArray(gpuSplitArray)) {
+                    newParams['gpuSplit'] = gpuSplitArray;
+                } else {
+                    console.error(`Provided GPU split value (${gpuSplitArray}) is not an array.`);
+                    newParams['gpuSplit'] = [];
+                }
             }
         } catch (error) {
             console.error(error);
