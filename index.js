@@ -188,7 +188,7 @@ async function onLoadModelClick() {
     if (!authToken) {
         // eslint-disable-next-line
         toastr.error(
-            "TabbyLoader: Admin key not found. Please provide one in SillyTavern's model settings or in the extension box."
+            'TabbyLoader: Admin key not found. Please provide one in SillyTavern\'s model settings or in the extension box.'
         );
 
         return;
@@ -297,7 +297,7 @@ async function onParameterEditorClick() {
         .prop('checked', extensionSettings?.modelParams?.fasttensors ?? false);
     parameterHtml
         .find('select[name="cache_mode_select"]')
-        .val(cache_mode[extensionSettings?.modelParams?.cacheMode ?? "FP16"])
+        .val(cache_mode[extensionSettings?.modelParams?.cacheMode ?? "FP16"]);
 
     // Rope and Draft rope
     parameterHtml
@@ -378,11 +378,11 @@ function migrateSettings() {
 
     if ('eightBitCache' in extensionSettings?.modelParams) {
         const newParams = {
-            cacheMode: extensionSettings?.modelParams?.eightBitCache ? "FP8" : "FP16"
+            cacheMode: extensionSettings?.modelParams?.eightBitCache ? 'FP8' : 'FP16'
         };
 
         delete extensionSettings.modelParams.eightBitCache;
-        Object.assign(extensionSettings?.modelParams, newParams)
+        Object.assign(extensionSettings?.modelParams, newParams);
 
         performSave = true;
     }
@@ -400,7 +400,7 @@ async function loadSettings() {
         Object.assign(extension_settings[settingsName], defaultSettings);
 
         // Refresh the reference to the extension_settings object
-        extensionSettings = extension_settings[settingsName]
+        extensionSettings = extension_settings[settingsName];
 
         saveSettingsDebounced();
     }
