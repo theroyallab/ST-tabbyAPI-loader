@@ -157,10 +157,8 @@ async function onLoadModelClick() {
         max_batch_size: Number(extensionSettings?.modelParams?.maxBatchSize) || null,
         rope_scale: Number(extensionSettings?.modelParams?.ropeScale) || null,
         rope_alpha: Number(extensionSettings?.modelParams?.ropeAlpha) || null,
-        no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
         gpu_split_auto: extensionSettings?.modelParams?.gpuSplitAuto,
         cache_mode: extensionSettings?.modelParams?.cacheMode,
-        use_cfg: extensionSettings?.modelParams?.useCfg,
         fasttensors: extensionSettings?.modelParams?.fasttensors,
     };
 
@@ -295,12 +293,6 @@ async function onParameterEditorClick() {
         .find('input[name="max_batch_size"]')
         .val(extensionSettings?.modelParams?.maxBatchSize ?? 'Auto');
     parameterHtml
-        .find('input[name="no_flash_attention"]')
-        .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
-    parameterHtml
-        .find('input[name="use_cfg"]')
-        .prop('checked', extensionSettings?.modelParams?.useCfg ?? false);
-    parameterHtml
         .find('input[name="fasttensors"]')
         .prop('checked', extensionSettings?.modelParams?.fasttensors ?? false);
     parameterHtml
@@ -349,10 +341,8 @@ async function onParameterEditorClick() {
                 draft_ropeScale: Number(parameterHtml.find('input[name="draft_rope_scale"]').val()) || null,
                 draft_ropeAlpha: Number(parameterHtml.find('input[name="draft_rope_alpha"]').val()) || null,
             },
-            noFlashAttention: parameterHtml.find('input[name="no_flash_attention"]').prop('checked'),
             gpuSplitAuto: parameterHtml.find('input[name="gpu_split_auto"]').prop('checked'),
             fasttensors: parameterHtml.find('input[name="fasttensors"]').prop('checked'),
-            useCfg: parameterHtml.find('input[name="use_cfg"]').prop('checked'),
             cacheMode: getKeyByValue(
                 cache_mode,
                 Number(
