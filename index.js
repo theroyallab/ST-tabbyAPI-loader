@@ -153,6 +153,8 @@ async function onLoadModelClick() {
     const body = {
         name: modelValue,
         max_seq_len: Number(extensionSettings?.modelParams?.maxSeqLen) || 0,
+        cache_size: Number(extensionSettings?.modelParams?.cacheSize) || null,
+        max_batch_size: Number(extensionSettings?.modelParams?.maxBatchSize) || null,
         rope_scale: Number(extensionSettings?.modelParams?.ropeScale) || null,
         rope_alpha: Number(extensionSettings?.modelParams?.ropeAlpha) || null,
         no_flash_attention: extensionSettings?.modelParams?.noFlashAttention,
@@ -287,6 +289,12 @@ async function onParameterEditorClick() {
         .find('input[name="max_seq_len"]')
         .val(extensionSettings?.modelParams?.maxSeqLen ?? 4096);
     parameterHtml
+        .find('input[name="cache_size"]')
+        .val(extensionSettings?.modelParams?.cacheSize ?? 'Max Seq Len');
+    parameterHtml
+        .find('input[name="max_batch_size"]')
+        .val(extensionSettings?.modelParams?.maxBatchSize ?? 'Auto');
+    parameterHtml
         .find('input[name="no_flash_attention"]')
         .prop('checked', extensionSettings?.modelParams?.noFlashAttention ?? false);
     parameterHtml
@@ -333,6 +341,8 @@ async function onParameterEditorClick() {
     if (popupResult) {
         const newParams = {
             maxSeqLen: Number(parameterHtml.find('input[name="max_seq_len"]').val()) || 4096,
+            cacheSize: Number(parameterHtml.find('input[name="cache_mode"]').val()) || null,
+            maxBatchSize: Number(parameterHtml.find('input[name="max_batch_size"]').val()) || null,
             ropeScale: Number(parameterHtml.find('input[name="rope_scale"]').val()) || null,
             ropeAlpha: Number(parameterHtml.find('input[name="rope_alpha"]').val()) || null,
             draft: {
