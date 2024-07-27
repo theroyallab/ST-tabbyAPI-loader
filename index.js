@@ -197,7 +197,6 @@ async function onLoadModelClick() {
     try {
         const response = await fetch(`${tabbyURL}/v1/model/load`, {
             method: 'POST',
-            credentials: 'include',
             headers: {
                 ...getRequestHeaders(),
                 'X-admin-key': authToken,
