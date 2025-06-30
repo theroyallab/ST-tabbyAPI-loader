@@ -151,7 +151,7 @@ async function onLoadModelClick() {
     const tabbyURL = getTabbyURL();
 
     const body = {
-        name: modelValue,
+        model_name: modelValue,
         max_seq_len: Number(extensionSettings?.modelParams?.maxSeqLen) || 0,
         cache_size: Number(extensionSettings?.modelParams?.cacheSize) || null,
         max_batch_size: Number(extensionSettings?.modelParams?.maxBatchSize) || null,
